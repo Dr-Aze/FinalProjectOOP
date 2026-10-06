@@ -3,22 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Code Camera Upload</title>
+    <title>QR Scanner</title>
+    <!-- HTML5 QR Code Reader Library -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        body { font-family: sans-serif; padding: 20px; text-align: center; }
-        form { border: 2px dashed #ccc; padding: 30px; border-radius: 8px; display: inline-block; }
-        input[type="file"] { margin-bottom: 15px; }
-        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        body { font-family: sans-serif; text-align: center; padding: 20px; }
+        #reader { width: 100%; max-width: 400px; margin: 0 auto; }
+        #result { margin-top: 20px; font-weight: bold; font-size: 1.2rem; color: #28a745; }
     </style>
 </head>
 <body>
-    <h2>Scan QR Code</h2>
-    
-    <form action="decode.php" method="POST" enctype="multipart/form-data">
-        <p>Tap below to take a photo of the QR code:</p>
-        <input type="file" name="qr_image" accept="image/*" capture="environment" required>
-        <br>
-        <button type="submit">Upload & Decode</button>
-    </form>
+
+    <h2>Student ID Scanner</h2>
+    <div id="reader"></div>
+    <div id="result"></div>
+
+    <script>
+        function onScanSuccess(decodedText, decodedResult) {
+            // decodedText contains the scanned Student ID number
+            document.getElementById('result').innerText = "Scanned ID: " + decodedText;
+
+            // Optional: Send the scanned ID to a Google Sheet, Firebase, or external API
+            // fetch('YOUR_API_ENDPOINT', { method: 'POST', body: JSON.stringify({ student_id: decodedText }) });
+        }
+
+        const html5QrcodeScanner = new Html5QrcodeScanner(
+            "reader", 
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            /* verbose= */ false
+        );
+        html5QrcodeScanner.render(onScanSuccess);
+    </script>
 </body>
 </html>
