@@ -3,23 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Continuous Attendance Scanner</title>
+    <title>Student ID Attendance Scanner</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; padding: 20px; }
         #reader { width: 100%; max-width: 400px; margin: 0 auto; border-radius: 12px; overflow: hidden; }
-        .status-card { margin-top: 20px; padding: 15px; border-radius: 8px; display: none; font-weight: bold; }
-        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        
+        .result-box {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .btn-scan {
+            margin-top: 15px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .btn-scan:hover {
+            background-color: #218838;
+        }
     </style>
 </head>
 <body>
 
     <h2>Student Attendance Scanner</h2>
     <div id="reader"></div>
-    <div id="status" class="status-card"></div>
+    
+    <!-- Result Container -->
+    <div id="result-container" class="result-box">
+        <div id="result-text"></div>
+        <button class="btn-scan" onclick="resetScanner()">Scan Next Student</button>
+    </div>
 
     <script>
-        const statusDiv = document.getElementById('status');
+        let html5QrcodeScanner;
 
         function playBeep() {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -32,28 +64,34 @@
         }
 
         function onScanSuccess(decodedText, decodedResult) {
-            // 1. Play audio feedback & vibrate phone
+            // 1. Audio and Vibration feedback
             playBeep();
             if (navigator.vibrate) navigator.vibrate(200);
 
-            // 2. Display scanned Student ID
-            statusDiv.className = "status-card success";
-            statusDiv.style.display = "block";
-            statusDiv.innerText = "✓ Scanned ID: " + decodedText + " (Next scan in 2s...)";
-
-            // 3. Pause scanning temporarily
+            // 2. Pause the scanner so it stops reading while the modal is shown
             html5QrcodeScanner.pause(true);
 
-            // 4. Send Student ID to backend/Google Sheet here (e.g. via fetch)
+            // 3. Show the output text
+            document.getElementById('result-text').innerHTML = `
+                <h3 style="margin-top:0;">✓ Scan Successful</h3>
+                <p><strong>Student ID:</strong> ${decodedText}</p>
+            `;
+            document.getElementById('result-container').style.display = 'block';
 
-            // 5. Automatically resume scanning after 2 seconds
-            setTimeout(() => {
-                statusDiv.style.display = "none";
-                html5QrcodeScanner.resume();
-            }, 2000);
+            // 4. (Optional) Send Student ID to database or Google Sheet via fetch:
+            // fetch('save_attendance.php', { method: 'POST', body: JSON.stringify({ student_id: decodedText }) });
         }
 
-        const html5QrcodeScanner = new Html5QrcodeScanner(
+        function resetScanner() {
+            // Hide the result box
+            document.getElementById('result-container').style.display = 'none';
+            
+            // Resume the camera scanner
+            html5QrcodeScanner.resume();
+        }
+
+        // Initialize Scanner
+        html5QrcodeScanner = new Html5QrcodeScanner(
             "reader", 
             { fps: 10, qrbox: { width: 250, height: 250 } },
             /* verbose= */ false
