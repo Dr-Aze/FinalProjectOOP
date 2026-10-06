@@ -3,28 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Scanner</title>
-    <!-- HTML5 QR Code Reader Library -->
+    <title>Student ID Scanner</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 20px; }
-        #reader { width: 100%; max-width: 400px; margin: 0 auto; }
-        #result { margin-top: 20px; font-weight: bold; font-size: 1.2rem; color: #28a745; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; padding: 20px; }
+        #reader { width: 100%; max-width: 400px; margin: 0 auto; border-radius: 12px; overflow: hidden; }
+        .success-box { display: none; background: #d4edda; color: #155724; padding: 15px; border-radius: 8px; margin-top: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <h2>Student ID Scanner</h2>
     <div id="reader"></div>
-    <div id="result"></div>
+    
+    <!-- Success Banner -->
+    <div id="success-message" class="success-box"></div>
 
     <script>
-        function onScanSuccess(decodedText, decodedResult) {
-            // decodedText contains the scanned Student ID number
-            document.getElementById('result').innerText = "Scanned ID: " + decodedText;
+        // Optional: Play a quick beep sound on scan
+        function playBeep() {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            osc.type = "sine";
+            osc.frequency.value = 800; // Beep frequency in Hz
+            osc.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.15); // Duration 150ms
+        }
 
-            // Optional: Send the scanned ID to a Google Sheet, Firebase, or external API
-            // fetch('YOUR_API_ENDPOINT', { method: 'POST', body: JSON.stringify({ student_id: decodedText }) });
+        function onScanSuccess(decodedText, decodedResult) {
+            // 1. Play audio beep
+            playBeep();
+
+            // 2. Vibrate phone (works on supported devices)
+            if (navigator.vibrate) {
+                navigator.vibrate(200); 
+            }
+
+            // 3. Display success visual notification
+            const messageDiv = document.getElementById('success-message');
+            messageDiv.style.display = 'block';
+            messageDiv.innerText = "✓ Scanned Student ID: " + decodedText;
+
+            // 4. (Optional) Pause scanner briefly so it doesn't scan the same code twice in 1 second
+            html5QrcodeScanner.pause(true);
+            setTimeout(() => {
+                html5QrcodeScanner.resume();
+            }, 2000);
         }
 
         const html5QrcodeScanner = new Html5QrcodeScanner(
